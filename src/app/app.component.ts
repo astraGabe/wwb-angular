@@ -1,27 +1,35 @@
-import { AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+
 import * as WorldWind from '@nasaworldwind/worldwind';
+
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-
 export class AppComponent implements AfterViewInit {
   @ViewChild('scene') scene: ElementRef;
+
   ngAfterViewInit() {
-    
-    var wwd = new WorldWind.WorldWindow("canvasOne");
+    // const wwd = WorldWind.WorldWindow(this.scene.nativeElement);
+    // This will work with the next release of WebWorldWind, which supports an
+    // actual element instead of the ID as a string.
 
-wwd.addLayer(new WorldWind.BMNGOneImageLayer());
-wwd.addLayer(new WorldWind.BMNGLandsatLayer());
+    // In the meantime, the ID must be used and makes the component not easily
+    // reusable.
+    const wwd = new WorldWind.WorldWindow('scene');
 
-wwd.addLayer(new WorldWind.CompassLayer());
-wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(wwd));
-wwd.addLayer(new WorldWind.ViewControlsLayer(wwd));
-  
-//add placemark
-var placemarkLayer = new WorldWind.RenderableLayer();
+    wwd.addLayer(new WorldWind.BMNGOneImageLayer());
+    wwd.addLayer(new WorldWind.BMNGLandsatLayer());
+
+    wwd.addLayer(new WorldWind.CompassLayer());
+    wwd.addLayer(new WorldWind.CoordinatesDisplayLayer(wwd));
+    wwd.addLayer(new WorldWind.ViewControlsLayer(wwd));
+
+    wwd.redraw();
+    var placemarkLayer = new WorldWind.RenderableLayer();
+
 wwd.addLayer(placemarkLayer);
 
 var placemarkAttributes = new WorldWind.PlacemarkAttributes(null);
@@ -45,8 +53,6 @@ placemark.label = "Placemark\n" +
 placemark.alwaysOnTop = true;
 
 placemarkLayer.addRenderable(placemark);
-
-// Add a polygon
 var polygonLayer = new WorldWind.RenderableLayer();
 wwd.addLayer(polygonLayer);
 
@@ -64,8 +70,6 @@ boundaries.push(new WorldWind.Position(20.0, -95.0, 700000.0));
 var polygon = new WorldWind.Polygon(boundaries, polygonAttributes);
 polygon.extrude = true;
 polygonLayer.addRenderable(polygon);
-
-
 var modelLayer = new WorldWind.RenderableLayer();
 wwd.addLayer(modelLayer);
 
@@ -78,11 +82,10 @@ colladaLoader.load("duck.dae", function (colladaModel: { scale: number; }) {
     modelLayer.addRenderable(colladaModel);
 });
 
-// Add WMS imagery
 var serviceAddress = "https://neo.sci.gsfc.nasa.gov/wms/wms?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0";
 var layerName = "MOD_LSTD_CLIM_M";
 
-var createLayer = function (xmlDom: any) {
+var createLayer = function (xmlDom: any){
     var wms = new WorldWind.WmsCapabilities(xmlDom);
     var wmsLayerCapabilities = wms.getNamedLayer(layerName);
     var wmsConfig = WorldWind.WmsLayer.formLayerConfiguration(wmsLayerCapabilities);
@@ -96,11 +99,7 @@ var logError = function (jqXhr: any, text: string, exception: string) {
     " exception: " + exception);
 };
 
-$.get(serviceAddress).done(createLayer).fail(logError);   
-
-
+$.get(serviceAddress).done(createLayer).fail(logError);
 wwd.redraw();
-  
   }
-
 }
